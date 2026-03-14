@@ -432,3 +432,43 @@ select {
   color: #6b7280;
   font-size: 14px;
 }
+
+/* 文件变化通知样式 */
+.file-change-notification {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #fff8e1;
+  border-bottom: 1px solid #ffc107;
+  font-size: 13px;
+  color: #856404;
+  flex-shrink: 0;
+}
+
+.file-change-notification button {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-color: #ffc107;
+  background: #fff;
+}
+
+.file-change-notification button:hover {
+  background: #fff3cd;
+}
+
+/* 标签页外部修改指示器 */
+.tab-item.modified-externally {
+  background: #fff3cd;
+  border-color: #ffc107;
+}
+
+.tab-item.modified-externally.active {
+  background: #fff8e1;
+  border-bottom-color: #fff8e1;
+}
+
+.modified-indicator {
+  color: #856404;
+  font-size: 12px;
+}

@@ -1,11 +1,22 @@
+use std::collections::HashSet;
 use std::fs;
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use tauri::Emitter;
 use tauri::Manager;
 
 static LAUNCH_FILE_PROCESSED: AtomicBool = AtomicBool::new(false);
 static LAUNCH_FILE_PATH: Mutex<Option<String>> = Mutex::new(None);
+
+// 文件监听器状态
+struct WatcherState {
+    watcher: RecommendedWatcher,
+    watched_paths: HashSet<String>,
+}
+
+static FILE_WATCHER: Mutex<Option<WatcherState>> = Mutex::new(None);
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -61,6 +72,66 @@ fn take_launch_file_path() -> Option<String> {
     LAUNCH_FILE_PATH.lock().unwrap().take()
 }
 
+/// 开始监听指定文件的变化
+#[tauri::command]
+fn watch_file(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    let mut state = FILE_WATCHER.lock().map_err(|e| e.to_string())?;
+
+    // 如果监听器不存在，创建一个新的
+    if state.is_none() {
+        let app_handle = app.clone();
+        let watcher = notify::recommended_watcher(move |res: Result<Event, notify::Error>| {
+            if let Ok(event) = res {
+                // 只处理修改事件
+                if event.kind.is_modify() || event.kind.is_remove() {
+                    if let Some(path) = event.paths.first() {
+                        let path_str = path.to_string_lossy().to_string();
+                        let change_type = if event.kind.is_remove() {
+                            "deleted"
+                        } else {
+                            "modified"
+                        };
+                        let _ = app_handle.emit("file-changed", serde_json::json!({
+                            "path": path_str,
+                            "changeType": change_type
+                        }));
+                    }
+                }
+            }
+        }).map_err(|e| e.to_string())?;
+
+        *state = Some(WatcherState {
+            watcher,
+            watched_paths: HashSet::new(),
+        });
+    }
+
+    // 添加文件到监听列表
+    if let Some(ref mut ws) = *state {
+        if !ws.watched_paths.contains(&path) {
+            ws.watcher.watch(Path::new(&path), RecursiveMode::NonRecursive)
+                .map_err(|e| e.to_string())?;
+            ws.watched_paths.insert(path.clone());
+        }
+    }
+
+    Ok(())
+}
+
+/// 停止监听指定文件
+#[tauri::command]
+fn unwatch_file(path: String) -> Result<(), String> {
+    let mut state = FILE_WATCHER.lock().map_err(|e| e.to_string())?;
+
+    if let Some(ref mut ws) = *state {
+        if ws.watched_paths.remove(&path) {
+            let _ = ws.watcher.unwatch(Path::new(&path));
+        }
+    }
+
+    Ok(())
+}
+
 /// 从命令行参数中提取文件路径
 fn extract_file_path_from_args() -> Option<String> {
     std::env::args_os().skip(1).find_map(|arg| {
@@ -110,7 +181,9 @@ pub fn run() {
             greet,
             load_file,
             save_file,
-            take_launch_file_path
+            take_launch_file_path,
+            watch_file,
+            unwatch_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

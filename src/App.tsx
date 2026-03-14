@@ -1,8 +1,9 @@
-import { CSSProperties, useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
+import { CSSProperties, useCallback, useEffect, useRef, useState, lazy, Suspense, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { javascript } from "@codemirror/lang-javascript";
@@ -14,6 +15,47 @@ import "./App.css";
 // 懒加载 ReactMarkdown 预览组件，提升启动速度
 const ReactMarkdown = lazy(() => import("react-markdown"));
 
+// 自定义图片组件，支持本地图片路径
+function MarkdownImage({ src, alt, currentFilePath }: { src?: string; alt?: string; currentFilePath?: string | null }) {
+  const resolvedSrc = useMemo(() => {
+    if (!src) return src;
+    // 网络图片直接返回
+    if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
+      return src;
+    }
+
+    let absolutePath = src;
+
+    // 处理相对路径：基于当前文件目录解析
+    if (currentFilePath && !src.match(/^[A-Za-z]:/) && !src.startsWith("/")) {
+      const fileDir = currentFilePath.substring(0, currentFilePath.replace(/\\/g, "/").lastIndexOf("/"));
+      // 标准化路径分隔符
+      const normalizedDir = fileDir.replace(/\\/g, "/");
+      // 处理 ./ 和 ../
+      const parts = normalizedDir.split("/");
+      const srcParts = src.replace(/\\/g, "/").split("/");
+
+      for (const part of srcParts) {
+        if (part === "..") {
+          parts.pop();
+        } else if (part !== ".") {
+          parts.push(part);
+        }
+      }
+      absolutePath = parts.join("/");
+    }
+
+    // 本地文件路径
+    try {
+      return convertFileSrc(absolutePath);
+    } catch {
+      return src;
+    }
+  }, [src, currentFilePath]);
+
+  return <img src={resolvedSrc} alt={alt} style={{ maxWidth: "100%" }} />;
+}
+
 type EditorTab = {
   id: string;
   title: string;
@@ -21,11 +63,12 @@ type EditorTab = {
   content: string;
   encoding: string;
   language: string;
+  externallyModified: boolean;
 };
 
 function App() {
   const [tabs, setTabs] = useState<EditorTab[]>([
-    { id: "tab-initial", title: "Untitled1", path: null, content: "", encoding: "UTF-8", language: "markdown" }
+    { id: "tab-initial", title: "Untitled1", path: null, content: "", encoding: "UTF-8", language: "markdown", externallyModified: false }
   ]);
   const [activeTabId, setActiveTabId] = useState<string>("tab-initial");
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("edit");
@@ -67,7 +110,7 @@ function App() {
         targetTabId = existed.id;
         return prev.map((tab) =>
           tab.id === existed.id
-            ? { ...tab, content: result.content, encoding: result.encoding, language: nextLanguage, title: toTabTitle(path) }
+            ? { ...tab, content: result.content, encoding: result.encoding, language: nextLanguage, title: toTabTitle(path), externallyModified: false }
             : tab
         );
       }
@@ -80,6 +123,7 @@ function App() {
         content: result.content,
         encoding: result.encoding,
         language: nextLanguage,
+        externallyModified: false,
       };
       return [...prev, nextTab];
     });
@@ -89,6 +133,12 @@ function App() {
     setCursorLine(1);
     setCursorCol(1);
     setStatusMessage(`已打开 ${path}`);
+    // 开始监听文件变化
+    try {
+      await invoke("watch_file", { path });
+    } catch (error) {
+      console.error("Failed to watch file:", error);
+    }
   }, []);
 
   const handleOpenFile = async () => {
@@ -130,7 +180,15 @@ function App() {
 
       if (path) {
         await invoke("save_file", { path, content, encoding });
-        updateActiveTab({ path, title: toTabTitle(path) });
+        // 如果是新文件，开始监听
+        if (!activeTab.path) {
+          try {
+            await invoke("watch_file", { path });
+          } catch (error) {
+            console.error("Failed to watch file:", error);
+          }
+        }
+        updateActiveTab({ path, title: toTabTitle(path), externallyModified: false });
         setStatusMessage("保存成功");
       }
     } catch (error) {
@@ -158,6 +216,21 @@ function App() {
       setStatusMessage("JSON 格式化成功");
     } catch (error) {
       setStatusMessage("JSON 格式错误: " + (error as Error).message);
+    }
+  };
+
+  const handleRefreshFile = async () => {
+    if (!activeTab?.path) return;
+    try {
+      const result: { content: string, encoding: string } = await invoke("load_file", { path: activeTab.path });
+      updateActiveTab({
+        content: result.content,
+        encoding: result.encoding,
+        externallyModified: false,
+      });
+      setStatusMessage("文件已刷新");
+    } catch (error) {
+      setStatusMessage("刷新失败: " + error);
     }
   };
 
@@ -221,6 +294,32 @@ function App() {
       }
     };
   }, [openFileByPath]);
+
+  // 监听文件变化事件
+  useEffect(() => {
+    let unlisten: UnlistenFn | undefined;
+
+    const setupFileChangeListener = async () => {
+      unlisten = await listen<{ path: string; changeType: string }>("file-changed", (event) => {
+        const { path } = event.payload;
+        setTabs((prev) => {
+          return prev.map((tab) => {
+            if (tab.path === path) {
+              return { ...tab, externallyModified: true };
+            }
+            return tab;
+          });
+        });
+      });
+    };
+
+    void setupFileChangeListener();
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setCursorLine(1);
@@ -322,7 +421,24 @@ function App() {
   } as CSSProperties;
   const zoomPercent = Math.round((fontSize / 15) * 100);
 
-  const closeTab = (tabId: string) => {
+  const closeTab = async (tabId: string) => {
+    const tabToClose = tabs.find((tab) => tab.id === tabId);
+
+    // 如果关闭的标签页有文件路径，检查是否需要停止监听
+    if (tabToClose?.path) {
+      const otherTabsWithPath = tabs.filter(
+        (tab) => tab.id !== tabId && tab.path === tabToClose.path
+      );
+      // 如果没有其他标签页打开同一文件，停止监听
+      if (otherTabsWithPath.length === 0) {
+        try {
+          await invoke("unwatch_file", { path: tabToClose.path });
+        } catch (error) {
+          console.error("Failed to unwatch file:", error);
+        }
+      }
+    }
+
     setTabs((prev) => {
       if (prev.length === 1) {
         const only = prev[0];
@@ -333,6 +449,7 @@ function App() {
           content: "",
           encoding: "UTF-8",
           language: "text",
+          externallyModified: false,
         };
         setActiveTabId(replacement.id);
         return [replacement];
@@ -359,6 +476,7 @@ function App() {
       content: "",
       encoding: "UTF-8",
       language: "text",
+      externallyModified: false,
     };
     setTabs(prev => [...prev, newTab]);
     setActiveTabId(newId);
@@ -463,16 +581,17 @@ function App() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            className={`tab-item ${tab.id === activeTabId ? "active" : ""}`}
+            className={`tab-item ${tab.id === activeTabId ? "active" : ""} ${tab.externallyModified ? "modified-externally" : ""}`}
             onClick={() => setActiveTabId(tab.id)}
             title={tab.path || tab.title}
           >
+            {tab.externallyModified && <span className="modified-indicator">⚠</span>}
             <span className="tab-title">{tab.title}</span>
             <span
               className="tab-close"
               onClick={(event) => {
                 event.stopPropagation();
-                closeTab(tab.id);
+                void closeTab(tab.id);
               }}
             >
               ×
@@ -488,6 +607,14 @@ function App() {
           +
         </button>
       </div>
+
+      {activeTab?.externallyModified && (
+        <div className="file-change-notification">
+          <span>文件 "{activeTab.title}" 已在外部被修改</span>
+          <button onClick={handleRefreshFile}>刷新</button>
+          <button onClick={() => updateActiveTab({ externallyModified: false })}>忽略</button>
+        </div>
+      )}
 
       <div className={`editor-area mode-${viewMode}`} style={editorStyle}>
         {(viewMode === 'edit' || viewMode === 'split') && (
@@ -511,7 +638,12 @@ function App() {
         {(viewMode === 'preview' || viewMode === 'split') && (
           <div className="preview-pane markdown-body">
             <Suspense fallback={<div className="preview-loading">加载预览...</div>}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: ({ node, ...props }) => <MarkdownImage {...props} currentFilePath={filePath} />
+                }}
+              >{content}</ReactMarkdown>
             </Suspense>
           </div>
         )}
