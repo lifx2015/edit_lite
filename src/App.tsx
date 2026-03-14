@@ -8,6 +8,11 @@ import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
+import { css } from "@codemirror/lang-css";
+import { html } from "@codemirror/lang-html";
+import { python } from "@codemirror/lang-python";
+import { sql } from "@codemirror/lang-sql";
+import { java } from "@codemirror/lang-java";
 import { rectangularSelection } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
 import remarkGfm from "remark-gfm";
@@ -101,9 +106,15 @@ function App() {
   const language = activeTab?.language ?? "text";
 
   const detectLanguageByPath = (path: string) => {
-    if (path.endsWith(".md")) return "markdown";
-    if (path.endsWith(".js") || path.endsWith(".ts")) return "javascript";
-    if (path.endsWith(".json")) return "json";
+    const lowerPath = path.toLowerCase();
+    if (lowerPath.endsWith(".md")) return "markdown";
+    if (lowerPath.endsWith(".js") || lowerPath.endsWith(".ts") || lowerPath.endsWith(".jsx") || lowerPath.endsWith(".tsx")) return "javascript";
+    if (lowerPath.endsWith(".json")) return "json";
+    if (lowerPath.endsWith(".css")) return "css";
+    if (lowerPath.endsWith(".html") || lowerPath.endsWith(".htm")) return "html";
+    if (lowerPath.endsWith(".py")) return "python";
+    if (lowerPath.endsWith(".sql")) return "sql";
+    if (lowerPath.endsWith(".java")) return "java";
     return "text";
   };
 
@@ -160,7 +171,7 @@ function App() {
         multiple: true,
         filters: [{
           name: 'Text',
-          extensions: ['txt', 'md', 'js', 'ts', 'json', 'html', 'css', 'rs', 'py']
+          extensions: ['txt', 'md', 'js', 'ts', 'jsx', 'tsx', 'json', 'html', 'htm', 'css', 'py', 'sql', 'java', 'rs', 'xml', 'yaml', 'yml']
         }]
       });
 
@@ -214,8 +225,13 @@ function App() {
     const baseExtensions = [rectangularSelection()];
     switch (language) {
       case 'markdown': return [...baseExtensions, markdown()];
-      case 'javascript': return [...baseExtensions, javascript()];
+      case 'javascript': return [...baseExtensions, javascript({ jsx: true, typescript: true })];
       case 'json': return [...baseExtensions, json()];
+      case 'css': return [...baseExtensions, css()];
+      case 'html': return [...baseExtensions, html()];
+      case 'python': return [...baseExtensions, python()];
+      case 'sql': return [...baseExtensions, sql()];
+      case 'java': return [...baseExtensions, java()];
       default: return baseExtensions;
     }
   };
@@ -574,8 +590,13 @@ function App() {
           <select value={language} onChange={(e) => updateActiveTab({ language: e.target.value })}>
             <option value="text">Plain Text</option>
             <option value="markdown">Markdown</option>
-            <option value="javascript">JavaScript</option>
+            <option value="javascript">JavaScript/TypeScript</option>
             <option value="json">JSON</option>
+            <option value="css">CSS</option>
+            <option value="html">HTML</option>
+            <option value="python">Python</option>
+            <option value="sql">SQL</option>
+            <option value="java">Java</option>
           </select>
 
           <div className="mode-toggle">

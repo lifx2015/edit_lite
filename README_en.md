@@ -10,7 +10,7 @@ English | **[中文](./README.md)**
 
 ### Editing
 - **Multi-tab Editing** - Edit multiple files simultaneously with tab management
-- **Syntax Support** - Markdown, JavaScript, JSON, and plain text
+- **Syntax Support** - Markdown, JavaScript/TypeScript, JSON, CSS, HTML, Python, SQL, Java
 - **Rectangular Selection** - Block selection editing mode
 - **JSON Formatting** - One-click JSON formatting
 
@@ -27,6 +27,7 @@ English | **[中文](./README.md)**
 - **GitHub Flavored Markdown** - Supports GFM extended syntax (tables, task lists, etc.)
 
 ### Interface Customization
+- **Theme Switching** - Supports system theme, light theme, and dark theme modes
 - **Font Selection** - Multiple monospace and CJK fonts available
 - **Font Size** - Supports 12-24pt, mouse wheel zoom (Ctrl+Wheel)
 - **Status Bar** - Displays file path, encoding, line/column position, zoom level
@@ -114,7 +115,7 @@ edit_lite/
 - [x] Custom font settings
 - [x] Find and replace
 - [x] Dark theme
-- [ ] More syntax highlighting
+- [x] More syntax highlighting
 - [ ] Auto save
 
 ## License
