@@ -9,6 +9,7 @@ import { markdown } from "@codemirror/lang-markdown";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { rectangularSelection } from "@codemirror/view";
+import { oneDark } from "@codemirror/theme-one-dark";
 import remarkGfm from "remark-gfm";
 import "./App.css";
 
@@ -66,6 +67,8 @@ type EditorTab = {
   externallyModified: boolean;
 };
 
+type ThemeMode = "system" | "light" | "dark";
+
 function App() {
   const [tabs, setTabs] = useState<EditorTab[]>([
     { id: "tab-initial", title: "Untitled1", path: null, content: "", encoding: "UTF-8", language: "markdown", externallyModified: false }
@@ -77,9 +80,19 @@ function App() {
   const [cursorLine, setCursorLine] = useState<number>(1);
   const [cursorCol, setCursorCol] = useState<number>(1);
   const [statusMessage, setStatusMessage] = useState<string>("就绪");
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem("themeMode");
+    return (saved as ThemeMode) || "system";
+  });
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">(() => {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
   const editorPaneRef = useRef<HTMLDivElement | null>(null);
   const floatingScrollRef = useRef<HTMLDivElement | null>(null);
   const floatingScrollContentRef = useRef<HTMLDivElement | null>(null);
+
+  // 计算当前实际主题
+  const currentTheme = themeMode === "system" ? systemTheme : themeMode;
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
   const content = activeTab?.content ?? "";
@@ -256,6 +269,22 @@ function App() {
     window.addEventListener("wheel", onWheel, { passive: false });
     return () => window.removeEventListener("wheel", onWheel);
   }, []);
+
+  // 监听系统主题变化
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => {
+      setSystemTheme(e.matches ? "dark" : "light");
+    };
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  // 应用主题到 document
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", currentTheme);
+    localStorage.setItem("themeMode", themeMode);
+  }, [currentTheme, themeMode]);
 
   useEffect(() => {
     let unlisten: UnlistenFn | undefined;
@@ -550,29 +579,76 @@ function App() {
           </select>
 
           <div className="mode-toggle">
-            <button 
-              className={`mode-icon-button ${viewMode === 'edit' ? 'active' : ''}`} 
+            <button
+              className={`mode-icon-button ${viewMode === 'edit' ? 'active' : ''}`}
               title="编辑模式"
               aria-label="编辑模式"
               onClick={() => setViewMode('edit')}
             >
               ✎
             </button>
-            <button 
-              className={`mode-icon-button ${viewMode === 'split' ? 'active' : ''}`} 
+            <button
+              className={`mode-icon-button ${viewMode === 'split' ? 'active' : ''}`}
               title="分屏模式"
               aria-label="分屏模式"
               onClick={() => setViewMode('split')}
             >
               ◫
             </button>
-            <button 
-              className={`mode-icon-button ${viewMode === 'preview' ? 'active' : ''}`} 
+            <button
+              className={`mode-icon-button ${viewMode === 'preview' ? 'active' : ''}`}
               title="预览模式"
               aria-label="预览模式"
               onClick={() => setViewMode('preview')}
             >
               👁
+            </button>
+          </div>
+
+          <div className="theme-toggle" role="group" aria-label="主题切换">
+            <span className="theme-toggle__indicator" data-active={themeMode} />
+            <button
+              aria-label="系统主题"
+              title="系统主题"
+              className={`theme-toggle__button ${themeMode === 'system' ? 'active' : ''}`}
+              aria-pressed={themeMode === 'system'}
+              onClick={() => setThemeMode('system')}
+            >
+              <svg className="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect width="20" height="14" x="2" y="5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                <line x1="8" x2="16" y1="21" y2="21" stroke="currentColor" strokeWidth="1.5"/>
+                <line x1="12" x2="12" y1="19" y2="21" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+            </button>
+            <button
+              aria-label="亮色主题"
+              title="亮色主题"
+              className={`theme-toggle__button ${themeMode === 'light' ? 'active' : ''}`}
+              aria-pressed={themeMode === 'light'}
+              onClick={() => setThemeMode('light')}
+            >
+              <svg className="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M12 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M12 20v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="m4.93 4.93 1.41 1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="m17.66 17.66 1.41 1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M2 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M20 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="m6.34 17.66-1.41 1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="m19.07 4.93-1.41 1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <button
+              aria-label="暗色主题"
+              title="暗色主题"
+              className={`theme-toggle__button ${themeMode === 'dark' ? 'active' : ''}`}
+              aria-pressed={themeMode === 'dark'}
+              onClick={() => setThemeMode('dark')}
+            >
+              <svg className="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -630,7 +706,7 @@ function App() {
                 setCursorLine(line.number);
                 setCursorCol(head - line.from + 1);
               }}
-              theme="light"
+              theme={currentTheme === "dark" ? oneDark : "light"}
             />
           </div>
         )}

@@ -113,8 +113,8 @@ edit_lite/
 - [x] Rectangular selection
 - [x] Custom font settings
 - [x] Find and replace
+- [x] Dark theme
 - [ ] More syntax highlighting
-- [ ] Dark theme
 - [ ] Auto save
 
 ## License
