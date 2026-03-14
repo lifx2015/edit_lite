@@ -19,7 +19,7 @@ English | **[中文](./README.md)**
 - **Auto Encoding Detection** - Supports UTF-8, GBK, Shift_JIS, EUC-KR, Windows-1252
 - **Encoding Conversion** - Save files with selected target encoding
 - **File Association** - Open files via system file association
-
+- **File Change Notification** - Notify users when files have been modified outside the editor
 ### Markdown Preview
 - **Edit Mode** - Pure editing view
 - **Split Mode** - Editor on the left, live preview on the right
