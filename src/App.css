@@ -225,6 +225,11 @@ select {
   padding: 0;
 }
 
+.icon-button.active {
+  background: var(--accent-color);
+  color: white;
+}
+
 .icon-field {
   display: inline-flex;
   align-items: center;

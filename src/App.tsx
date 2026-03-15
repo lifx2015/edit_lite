@@ -13,7 +13,7 @@ import { html } from "@codemirror/lang-html";
 import { python } from "@codemirror/lang-python";
 import { sql } from "@codemirror/lang-sql";
 import { java } from "@codemirror/lang-java";
-import { rectangularSelection } from "@codemirror/view";
+import { rectangularSelection, EditorView } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
 import remarkGfm from "remark-gfm";
 import "./App.css";
@@ -82,6 +82,7 @@ function App() {
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("edit");
   const [fontFamily, setFontFamily] = useState<string>("Consolas");
   const [fontSize, setFontSize] = useState<number>(15);
+  const [wordWrap, setWordWrap] = useState<boolean>(true);
   const [cursorLine, setCursorLine] = useState<number>(1);
   const [cursorCol, setCursorCol] = useState<number>(1);
   const [statusMessage, setStatusMessage] = useState<string>("就绪");
@@ -223,6 +224,9 @@ function App() {
 
   const getExtensions = () => {
     const baseExtensions = [rectangularSelection()];
+    if (wordWrap) {
+      baseExtensions.push(EditorView.lineWrapping);
+    }
     switch (language) {
       case 'markdown': return [...baseExtensions, markdown()];
       case 'javascript': return [...baseExtensions, javascript({ jsx: true, typescript: true })];
@@ -284,6 +288,23 @@ function App() {
     };
     window.addEventListener("wheel", onWheel, { passive: false });
     return () => window.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // 快捷键 Ctrl++ 和 Ctrl+- 控制字体大小
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === "=" || event.key === "+") {
+          event.preventDefault();
+          setFontSize((prev) => Math.min(32, prev + 1));
+        } else if (event.key === "-") {
+          event.preventDefault();
+          setFontSize((prev) => Math.max(8, prev - 1));
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   // 监听系统主题变化
@@ -548,6 +569,12 @@ function App() {
           {language === 'json' && (
             <button className="icon-button" onClick={handleFormatJson} title="格式化 JSON" aria-label="格式化 JSON">⟳</button>
           )}
+          <button
+            className={`icon-button ${wordWrap ? 'active' : ''}`}
+            onClick={() => setWordWrap(!wordWrap)}
+            title={wordWrap ? "关闭自动换行" : "开启自动换行"}
+            aria-label={wordWrap ? "关闭自动换行" : "开启自动换行"}
+          >↩</button>
         </div>
         
         <div className="view-controls">

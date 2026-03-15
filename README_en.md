@@ -12,6 +12,7 @@ English | **[中文](./README.md)**
 - **Multi-tab Editing** - Edit multiple files simultaneously with tab management
 - **Syntax Support** - Markdown, JavaScript/TypeScript, JSON, CSS, HTML, Python, SQL, Java
 - **Rectangular Selection** - Block selection editing mode
+- **Word Wrap** - Toggle word wrap on/off
 - **JSON Formatting** - One-click JSON formatting
 
 ### File Operations
@@ -37,6 +38,8 @@ English | **[中文](./README.md)**
 |----------|--------|
 | Ctrl+N | New file |
 | Ctrl+S | Save file |
+| Ctrl++ | Increase font size |
+| Ctrl+- | Decrease font size |
 | Ctrl+Wheel | Zoom font |
 
 ## Tech Stack
