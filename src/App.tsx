@@ -560,6 +560,18 @@ function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [createNewTab]);
 
+  // 快捷键 Ctrl+W 关闭当前标签页
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "w") {
+        event.preventDefault();
+        void closeTab(activeTabId);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeTabId]);
+
   return (
     <div className="app-container">
       <div className="toolbar">

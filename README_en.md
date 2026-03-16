@@ -21,6 +21,7 @@ English | **[中文](./README.md)**
 - **Encoding Conversion** - Save files with selected target encoding
 - **File Association** - Open files via system file association
 - **File Change Notification** - Notify users when files have been modified outside the editor
+- **Window Auto Activation** - Automatically restore and focus window when opening files while minimized
 ### Markdown Preview
 - **Edit Mode** - Pure editing view
 - **Split Mode** - Editor on the left, live preview on the right
@@ -38,6 +39,7 @@ English | **[中文](./README.md)**
 |----------|--------|
 | Ctrl+N | New file |
 | Ctrl+S | Save file |
+| Ctrl+W | Close current tab |
 | Ctrl++ | Increase font size |
 | Ctrl+- | Decrease font size |
 | Ctrl+Wheel | Zoom font |
@@ -109,7 +111,7 @@ edit_lite/
 | .rs | Rust |
 | .py | Python |
 
-## Roadmap
+## Roadmaprcmd
 
 - [x] Markdown syntax support
 - [x] JavaScript syntax support

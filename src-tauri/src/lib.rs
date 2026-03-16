@@ -165,7 +165,11 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             // 获取主窗口并显示/聚焦
             if let Some(window) = app.get_webview_window("main") {
+                // 先取消最小化状态
+                let _ = window.unminimize();
+                // 显示窗口
                 let _ = window.show();
+                // 将窗口置顶
                 let _ = window.set_focus();
             }
             // args 包含命令行参数，第一个是 exe 路径，第二个开始是文件路径
