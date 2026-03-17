@@ -3,7 +3,7 @@
  * 支持: 标准 Markdown 预览 / 增强型预览（含指令解析）
  */
 
-import React, { Suspense, useMemo, memo } from 'react';
+import React, { Suspense, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { PluggableList } from 'unified';
@@ -24,9 +24,28 @@ export interface PreviewEngineProps {
   className?: string;
 }
 
+export interface PreviewEngineRef {
+  getContainer: () => HTMLDivElement | null;
+}
+
 interface DirectiveComponentProps {
   directiveName: string;
   directiveArgs: DirectiveConfig;
+}
+
+// ============================================
+// 标题 ID 生成
+// ============================================
+
+let headingIdCounter = 0;
+
+function generateHeadingId(text: string): string {
+  const sanitized = text
+    .toLowerCase()
+    .replace(/[^\w\u4e00-\u9fa5\s-]/g, '')
+    .replace(/\s+/g, '-');
+
+  return sanitized || `heading-${headingIdCounter++}`;
 }
 
 // ============================================
@@ -185,6 +204,37 @@ const EnhancedMarkdown: React.FC<EnhancedMarkdownProps> = ({ content, currentFil
       img: ({ node, ...props }: any) => (
         <MarkdownImage {...props} currentFilePath={currentFilePath} />
       ),
+      // 标题组件（添加 ID）
+      h1: ({ children }: any) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateHeadingId(text);
+        return <h1 id={id}>{children}</h1>;
+      },
+      h2: ({ children }: any) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateHeadingId(text);
+        return <h2 id={id}>{children}</h2>;
+      },
+      h3: ({ children }: any) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateHeadingId(text);
+        return <h3 id={id}>{children}</h3>;
+      },
+      h4: ({ children }: any) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateHeadingId(text);
+        return <h4 id={id}>{children}</h4>;
+      },
+      h5: ({ children }: any) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateHeadingId(text);
+        return <h5 id={id}>{children}</h5>;
+      },
+      h6: ({ children }: any) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateHeadingId(text);
+        return <h6 id={id}>{children}</h6>;
+      },
       // 处理段落节点（检测指令）
       p: ({ children }: any) => {
         // 尝试从 children 中提取文本
@@ -239,40 +289,84 @@ const EnhancedMarkdown: React.FC<EnhancedMarkdownProps> = ({ content, currentFil
 // 主预览引擎
 // ============================================
 
-const PreviewEngine: React.FC<PreviewEngineProps> = ({
-  content,
-  mode,
-  currentFilePath,
-  className = '',
-}) => {
-  // 标准预览模式
-  if (mode === 'standard') {
+const PreviewEngine = forwardRef<PreviewEngineRef, PreviewEngineProps>(
+  ({ content, mode, currentFilePath, className = '' }, ref) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // 暴露 ref 方法
+    useImperativeHandle(ref, () => ({
+      getContainer: () => containerRef.current,
+    }));
+
+    // 为标题添加 ID 的组件
+    const headingComponents = useMemo(
+      () => ({
+        h1: ({ children }: any) => {
+          const text = typeof children === 'string' ? children : '';
+          const id = generateHeadingId(text);
+          return <h1 id={id}>{children}</h1>;
+        },
+        h2: ({ children }: any) => {
+          const text = typeof children === 'string' ? children : '';
+          const id = generateHeadingId(text);
+          return <h2 id={id}>{children}</h2>;
+        },
+        h3: ({ children }: any) => {
+          const text = typeof children === 'string' ? children : '';
+          const id = generateHeadingId(text);
+          return <h3 id={id}>{children}</h3>;
+        },
+        h4: ({ children }: any) => {
+          const text = typeof children === 'string' ? children : '';
+          const id = generateHeadingId(text);
+          return <h4 id={id}>{children}</h4>;
+        },
+        h5: ({ children }: any) => {
+          const text = typeof children === 'string' ? children : '';
+          const id = generateHeadingId(text);
+          return <h5 id={id}>{children}</h5>;
+        },
+        h6: ({ children }: any) => {
+          const text = typeof children === 'string' ? children : '';
+          const id = generateHeadingId(text);
+          return <h6 id={id}>{children}</h6>;
+        },
+      }),
+      []
+    );
+
+    // 标准预览模式
+    if (mode === 'standard') {
+      return (
+        <div ref={containerRef} className={`preview-content standard-preview ${className}`}>
+          <Suspense fallback={<div className="preview-loading">加载预览...</div>}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                img: ({ node, ...props }: any) => (
+                  <MarkdownImage {...props} currentFilePath={currentFilePath} />
+                ),
+                ...headingComponents,
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          </Suspense>
+        </div>
+      );
+    }
+
+    // 增强预览模式
     return (
-      <div className={`preview-content standard-preview ${className}`}>
-        <Suspense fallback={<div className="preview-loading">加载预览...</div>}>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              img: ({ node, ...props }: any) => (
-                <MarkdownImage {...props} currentFilePath={currentFilePath} />
-              ),
-            }}
-          >
-            {content}
-          </ReactMarkdown>
+      <div ref={containerRef} className={`preview-content enhanced-preview ${className}`}>
+        <Suspense fallback={<div className="preview-loading">加载增强预览...</div>}>
+          <EnhancedMarkdown content={content} currentFilePath={currentFilePath} />
         </Suspense>
       </div>
     );
   }
+);
 
-  // 增强预览模式
-  return (
-    <div className={`preview-content enhanced-preview ${className}`}>
-      <Suspense fallback={<div className="preview-loading">加载增强预览...</div>}>
-        <EnhancedMarkdown content={content} currentFilePath={currentFilePath} />
-      </Suspense>
-    </div>
-  );
-};
+PreviewEngine.displayName = 'PreviewEngine';
 
 export default PreviewEngine;

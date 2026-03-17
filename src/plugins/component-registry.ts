@@ -251,4 +251,22 @@ registerComponents([
     description: '排序算法可视化',
     category: 'algorithm',
   },
+  {
+    name: 'search',
+    loader: () => import('../visualizers/algorithms/SearchVisualizer'),
+    description: '查找算法可视化',
+    category: 'algorithm',
+  },
+  {
+    name: 'graph',
+    loader: () => import('../visualizers/algorithms/GraphVisualizer'),
+    description: '图算法可视化',
+    category: 'algorithm',
+  },
+  {
+    name: 'chart',
+    loader: () => import('../visualizers/charts/LineChart'),
+    description: '曲线图',
+    category: 'math',
+  },
 ]);

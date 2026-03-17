@@ -14,7 +14,8 @@ import { sql } from "@codemirror/lang-sql";
 import { java } from "@codemirror/lang-java";
 import { rectangularSelection, EditorView } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
-import PreviewEngine, { type PreviewMode } from "./components/PreviewEngine";
+import PreviewEngine, { type PreviewMode, type PreviewEngineRef } from "./components/PreviewEngine";
+import Toc from "./components/Toc";
 import { initializeExternalPlugins } from "./plugins/component-registry";
 import "./App.css";
 
@@ -50,6 +51,7 @@ function App() {
     const saved = localStorage.getItem("themeMode");
     return (saved as ThemeMode) || "system";
   });
+  const previewEngineRef = useRef<PreviewEngineRef>(null);
   const [systemTheme, setSystemTheme] = useState<"light" | "dark">(() => {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
@@ -742,33 +744,42 @@ function App() {
         
         {(viewMode === 'preview' || viewMode === 'split') && (
           <div className="preview-pane markdown-body">
-            <div className="preview-mode-toggle">
-              <button
-                className={`preview-mode-btn ${previewMode === 'standard' ? 'active' : ''}`}
-                onClick={() => {
-                  setPreviewMode('standard');
-                  localStorage.setItem('previewMode', 'standard');
-                }}
-                title="标准预览"
-              >
-                标准
-              </button>
-              <button
-                className={`preview-mode-btn ${previewMode === 'enhanced' ? 'active' : ''}`}
-                onClick={() => {
-                  setPreviewMode('enhanced');
-                  localStorage.setItem('previewMode', 'enhanced');
-                }}
-                title="增强预览（支持算法可视化）"
-              >
-                增强
-              </button>
+            <div className="preview-main">
+              <div className="preview-mode-toggle">
+                <button
+                  className={`preview-mode-btn ${previewMode === 'standard' ? 'active' : ''}`}
+                  onClick={() => {
+                    setPreviewMode('standard');
+                    localStorage.setItem('previewMode', 'standard');
+                  }}
+                  title="标准预览"
+                >
+                  标准
+                </button>
+                <button
+                  className={`preview-mode-btn ${previewMode === 'enhanced' ? 'active' : ''}`}
+                  onClick={() => {
+                    setPreviewMode('enhanced');
+                    localStorage.setItem('previewMode', 'enhanced');
+                  }}
+                  title="增强预览（支持算法可视化）"
+                >
+                  增强
+                </button>
+              </div>
+              <PreviewEngine
+                ref={previewEngineRef}
+                content={content}
+                mode={previewMode}
+                currentFilePath={filePath}
+              />
             </div>
-            <PreviewEngine
-              content={content}
-              mode={previewMode}
-              currentFilePath={filePath}
-            />
+            {Toc && language === 'markdown' && (
+              <Toc
+                content={content}
+                getPreviewContainer={() => previewEngineRef.current?.getContainer() ?? null}
+              />
+            )}
           </div>
         )}
       </div>

@@ -369,6 +369,14 @@ select {
   width: 100%;
   padding: 20px;
   background-color: var(--bg-primary);
+  display: flex;
+  gap: 16px;
+}
+
+.mode-preview .preview-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
 }
 
 .mode-split .editor-pane {
@@ -380,6 +388,14 @@ select {
   width: 50%;
   padding: 16px;
   background-color: var(--bg-primary);
+  display: flex;
+  gap: 12px;
+}
+
+.mode-split .preview-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
 }
 
 .markdown-body {
@@ -409,25 +425,58 @@ select {
   font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
 
+/* 表格样式 */
+.markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 16px 0;
+  font-size: 0.9em;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  border: 1px solid var(--border-color-strong);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body table th {
+  background-color: var(--bg-tertiary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-body table tr:nth-child(even) {
+  background-color: var(--bg-tertiary);
+}
+
+.markdown-body table tr:hover {
+  background-color: color-mix(in srgb, var(--accent-color) 5%, var(--bg-tertiary));
+}
+
+/* 引用块样式 */
+.markdown-body blockquote {
+  padding: 0 1em;
+  color: var(--text-secondary);
+  border-left: 0.25em solid var(--border-color-strong);
+  margin: 0;
+}
+
+/* 代码块增强样式 */
 .markdown-body pre {
   padding: 16px;
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
   background-color: var(--bg-tertiary);
-  border-radius: 3px;
+  border: 1px solid var(--border-color-strong);
+  border-radius: 6px;
 }
 
 .markdown-body pre code {
   background-color: transparent;
   padding: 0;
-}
-
-.markdown-body blockquote {
-  padding: 0 1em;
-  color: var(--text-secondary);
-  border-left: 0.25em solid var(--border-color-strong);
-  margin: 0;
+  border: none;
 }
 
 .editor-pane .cm-editor,
@@ -703,6 +752,24 @@ select {
   background: #10b981;
 }
 
+.bar.checking {
+  background: #f59e0b;
+  transform: scaleY(1.02);
+}
+
+.bar.in-range {
+  background: #8b5cf6;
+}
+
+.bar.found {
+  background: #10b981;
+  transform: scaleY(1.05);
+}
+
+.search-container {
+  height: 180px;
+}
+
 .bar-value {
   font-size: 11px;
   font-weight: 600;
@@ -802,4 +869,291 @@ select {
   font-size: 12px;
   opacity: 0.8;
   margin-top: 4px;
+}
+
+/* ============================================
+   目录组件样式
+   ============================================ */
+
+/* 折叠状态的目录按钮 */
+.toc-collapsed {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 4px;
+  margin: 8px 0;
+}
+
+.toc-collapsed:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-color);
+}
+
+.toc-collapsed-icon {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.toc-collapsed-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.toc-container {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.toc-header {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toc-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.toc-collapse-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.toc-collapse-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.toc-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+}
+
+.toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc-item {
+  margin: 0;
+  padding: 0;
+}
+
+.toc-link {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.15s;
+  border-radius: 0;
+}
+
+.toc-link:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.toc-item.active .toc-link {
+  color: var(--accent-color);
+  background: var(--bg-tertiary);
+  font-weight: 500;
+}
+
+/* 不同层级的样式 */
+.toc-level-1 .toc-link {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toc-level-2 .toc-link {
+  font-size: 13px;
+}
+
+.toc-level-3 .toc-link,
+.toc-level-4 .toc-link,
+.toc-level-5 .toc-link,
+.toc-level-6 .toc-link {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.toc-level-3 .toc-link:hover,
+.toc-level-4 .toc-link:hover,
+.toc-level-5 .toc-link:hover,
+.toc-level-6 .toc-link:hover {
+  color: var(--text-secondary);
+}
+
+/* 滚动条样式 */
+.toc-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.toc-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.toc-nav::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.toc-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color-strong);
+}
+
+/* ============================================
+   曲线图组件样式
+   ============================================ */
+
+.line-chart-container {
+  padding: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin: 12px 0;
+}
+
+.line-chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.line-chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legend-color {
+  width: 12px;
+  height: 3px;
+  border-radius: 1px;
+}
+
+.chart-tooltip {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color-strong);
+  border-radius: 4px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tooltip-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* ============================================
+   图算法可视化样式
+   ============================================ */
+
+.graph-visualizer {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.graph-canvas {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  display: block;
+  margin: 0 auto;
+}
+
+.graph-status {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: SFMono-Regular, Consolas, monospace;
+}
+
+.search-visualizer {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin: 12px 0;
 }

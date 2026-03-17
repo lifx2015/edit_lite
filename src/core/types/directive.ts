@@ -13,14 +13,15 @@ export interface SourcePosition {
 export interface DirectiveConfig {
   // 通用参数
   id?: string;
-  width?: string;
-  height?: string;
+  width?: number | string;
+  height?: number | string;
 
   // 算法参数
   array?: number[];
-  algorithm?: 'bubble' | 'quick' | 'merge' | 'insertion' | 'selection';
+  algorithm?: string; // 改为通用字符串类型
   speed?: number; // 动画速度 (ms)
   showSteps?: boolean;
+  target?: number; // 查找目标
 
   // 3D 参数
   rotation?: number;
@@ -31,6 +32,14 @@ export interface DirectiveConfig {
   // 图论参数
   nodes?: Array<{ id: string; label?: string }>;
   edges?: Array<{ from: string; to: string; weight?: number }>;
+  startNode?: string;
+
+  // 图表参数
+  title?: string;
+  data?: unknown;
+  labels?: string[];
+  showGrid?: boolean;
+  showDots?: boolean;
 }
 
 export interface Directive {
