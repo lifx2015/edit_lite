@@ -122,7 +122,7 @@ const ExternalPlugin: React.FC<ExternalPluginProps> = ({
     // 注入 PluginRuntime
     const runtimeScript = `
 <script>
-  // EditLite Plugin Runtime
+  // lite-code-editor Plugin Runtime
   window.PluginRuntime = {
     directiveName: '${directiveName}',
     args: ${JSON.stringify(args)},

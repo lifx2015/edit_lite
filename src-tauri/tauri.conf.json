@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "EditLite",
+  "productName": "lite-code-editor",
   "version": "0.1.0",
-  "identifier": "com.li.editlite",
+  "identifier": "com.li.lite-code-editor",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "EditLite",
+        "title": "lite-code-editor",
         "width": 900,
         "height": 650,
         "visible": true,

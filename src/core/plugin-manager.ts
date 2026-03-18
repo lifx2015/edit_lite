@@ -1,5 +1,5 @@
 /**
- * EditLite 插件管理器
+ * lite-code-editor 插件管理器
  *
  * 负责加载、管理和执行用户自定义插件
  */
@@ -37,9 +37,9 @@ class PluginManager {
    */
   private async getDefaultPluginDirectory(): Promise<string> {
     // 在 Tauri 中，插件目录位于应用目录下的 plugins 文件夹
-    // Windows: %APPDATA%/edit_lite/plugins
-    // macOS: ~/Library/Application Support/edit_lite/plugins
-    // Linux: ~/.config/edit_lite/plugins
+    // Windows: %APPDATA%/lite-code-editor/plugins
+    // macOS: ~/Library/Application Support/lite-code-editor/plugins
+    // Linux: ~/.config/lite-code-editor/plugins
 
     if (typeof window !== 'undefined' && (window as any).__TAURI__) {
       const { appDataDir } = await import('@tauri-apps/api/path');

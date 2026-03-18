@@ -3,7 +3,7 @@
     "id": "example-counter",
     "name": "计数器示例",
     "version": "1.0.0",
-    "author": "EditLite Team",
+    "author": "lite-code-editor Team",
     "description": "一个简单的计数器插件示例，演示插件开发流程",
     "directives": [
       {

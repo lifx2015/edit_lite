@@ -1,10 +1,10 @@
-# EditLite
+# lite-code-editor
 
 A lightweight text editor built with Tauri, focused on simplicity and efficiency.
 
 English | **[中文](./README.md)**
 
-![EditLite Screenshot](./screenshot.png)
+![lite-code-editor Screenshot](./screenshot.png)
 
 ## Features
 
@@ -31,7 +31,7 @@ English | **[中文](./README.md)**
 
 ### Enhanced Preview (Algorithm Visualization)
 
-EditLite has built-in algorithm visualization functionality, no plugin installation required. Use special directives in Markdown to display dynamic algorithm demonstrations.
+lite-code-editor has built-in algorithm visualization functionality, no plugin installation required. Use special directives in Markdown to display dynamic algorithm demonstrations.
 
 #### Usage
 
@@ -69,7 +69,7 @@ EditLite has built-in algorithm visualization functionality, no plugin installat
 
 #### External Plugin System
 
-EditLite supports user-developed custom plugins that can be placed in the plugins directory without repackaging the application.
+lite-code-editor supports user-developed custom plugins that can be placed in the plugins directory without repackaging the application.
 
 **Example Plugin: Counter**
 
@@ -146,7 +146,7 @@ The installer will be generated in `src-tauri/target/release/bundle/`.
 ## Project Structure
 
 ```
-edit_lite/
+lite-code-editor/
 ├── src/                          # Frontend source
 │   ├── App.tsx                   # Main app component
 │   ├── App.css                   # Styles
