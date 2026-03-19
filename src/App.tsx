@@ -705,32 +705,34 @@ function App() {
             <option value="java">Java</option>
           </select>
 
-          <div className="mode-toggle">
-            <button
-              className={`mode-icon-button ${viewMode === 'edit' ? 'active' : ''}`}
-              title="编辑模式"
-              aria-label="编辑模式"
-              onClick={() => setViewMode('edit')}
-            >
-              ✎
-            </button>
-            <button
-              className={`mode-icon-button ${viewMode === 'split' ? 'active' : ''}`}
-              title="分屏模式"
-              aria-label="分屏模式"
-              onClick={() => setViewMode('split')}
-            >
-              ◫
-            </button>
-            <button
-              className={`mode-icon-button ${viewMode === 'preview' ? 'active' : ''}`}
-              title="预览模式"
-              aria-label="预览模式"
-              onClick={() => setViewMode('preview')}
-            >
-              👁
-            </button>
-          </div>
+          {language === 'markdown' && (
+            <div className="mode-toggle">
+              <button
+                className={`mode-icon-button ${viewMode === 'edit' ? 'active' : ''}`}
+                title="编辑模式"
+                aria-label="编辑模式"
+                onClick={() => setViewMode('edit')}
+              >
+                ✎
+              </button>
+              <button
+                className={`mode-icon-button ${viewMode === 'split' ? 'active' : ''}`}
+                title="分屏模式"
+                aria-label="分屏模式"
+                onClick={() => setViewMode('split')}
+              >
+                ◫
+              </button>
+              <button
+                className={`mode-icon-button ${viewMode === 'preview' ? 'active' : ''}`}
+                title="预览模式"
+                aria-label="预览模式"
+                onClick={() => setViewMode('preview')}
+              >
+                👁
+              </button>
+            </div>
+          )}
 
           <div className="theme-toggle" role="group" aria-label="主题切换">
             <span className="theme-toggle__indicator" data-active={themeMode} />
@@ -858,9 +860,9 @@ function App() {
               <ul className="features-list">
                 <li>支持 Markdown 实时预览（标准/增强模式）</li>
                 <li>支持多种编程语言语法高亮</li>
-                <li>自动保存：已保存文件自动保存，新文件缓存恢复</li>
                 <li>文件外部修改检测</li>
                 <li>算法可视化组件支持</li>
+                <li>脑图可视化支持</li>
               </ul>
             </div>
           </div>
@@ -870,8 +872,8 @@ function App() {
       {/* 编辑器区域 */}
       {tabs.length > 0 && (
         <>
-        <div className={`editor-area mode-${viewMode}`} style={editorStyle}>
-        {(viewMode === 'edit' || viewMode === 'split') && (
+        <div className={`editor-area mode-${language === 'markdown' ? viewMode : 'edit'}`} style={editorStyle}>
+        {(language !== 'markdown' || viewMode === 'edit' || viewMode === 'split') && (
           <div className="editor-pane" ref={editorPaneRef}>
             <CodeMirror
               value={content}
@@ -888,8 +890,8 @@ function App() {
             />
           </div>
         )}
-        
-        {(viewMode === 'preview' || viewMode === 'split') && (
+
+        {language === 'markdown' && (viewMode === 'preview' || viewMode === 'split') && (
           <div className="preview-pane markdown-body">
             <div className="preview-main">
               <div className="preview-mode-toggle">
@@ -921,7 +923,7 @@ function App() {
                 currentFilePath={filePath}
               />
             </div>
-            {Toc && language === 'markdown' && (
+            {Toc && (
               <Toc
                 content={content}
                 getPreviewContainer={() => previewEngineRef.current?.getContainer() ?? null}
@@ -930,7 +932,7 @@ function App() {
           </div>
         )}
       </div>
-      <div className={`floating-h-scroll mode-${viewMode}`} ref={floatingScrollRef} aria-hidden="true">
+      <div className={`floating-h-scroll mode-${language === 'markdown' ? viewMode : 'edit'}`} ref={floatingScrollRef} aria-hidden="true">
         <div className="floating-h-scroll-content" ref={floatingScrollContentRef} />
       </div>
       <div className="status-bar">
