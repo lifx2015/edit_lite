@@ -350,57 +350,6 @@ function App() {
     void loadCacheFiles();
   }, []);
 
-  // 自动保存（防抖）
-  useEffect(() => {
-    const autoSaveTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
-
-    const performAutoSave = async (tab: EditorTab) => {
-      // 只保存有修改的文件
-      if (tab.content === tab.savedContent) return;
-
-      try {
-        if (tab.path) {
-          // 已保存的文件：直接保存
-          await invoke("save_file", { path: tab.path, content: tab.content, encoding: tab.encoding });
-          // 更新 savedContent
-          setTabs((prev) => prev.map((t) =>
-            t.id === tab.id ? { ...t, savedContent: tab.content } : t
-          ));
-        } else if (tab.content.length > 0) {
-          // 新文件：保存到缓存
-          await invoke("save_cache_file", {
-            id: tab.id,
-            title: tab.title,
-            content: tab.content,
-            language: tab.language,
-          });
-        }
-      } catch (error) {
-        console.error("Auto-save failed:", error);
-      }
-    };
-
-    // 为每个有修改的 tab 设置自动保存
-    tabs.forEach((tab) => {
-      if (tab.content !== tab.savedContent && tab.content.length > 0) {
-        // 清除之前的定时器
-        const existingTimer = autoSaveTimers.get(tab.id);
-        if (existingTimer) {
-          clearTimeout(existingTimer);
-        }
-        // 设置新的定时器（2秒后自动保存）
-        const timer = setTimeout(() => {
-          void performAutoSave(tab);
-        }, 2000);
-        autoSaveTimers.set(tab.id, timer);
-      }
-    });
-
-    return () => {
-      autoSaveTimers.forEach((timer) => clearTimeout(timer));
-    };
-  }, [tabs]);
-
   useEffect(() => {
     let unlisten: UnlistenFn | undefined;
 
